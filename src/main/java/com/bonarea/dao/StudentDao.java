@@ -15,13 +15,15 @@ import java.util.List;
  */
 public interface StudentDao {
 
-    Student add(Student student) throws SQLException, ClassNotFoundException;
+    Student add(Student student) throws SQLException;
 
-    Student getStudentById(Integer id) throws SQLException, ClassNotFoundException;
+    Student getStudentById(Integer id) throws SQLException;
 
-    List<Student> getAll() throws SQLException, ClassNotFoundException;
+    List<Student> getAll() throws SQLException;
 
-    void delete(Integer id) throws SQLException, ClassNotFoundException;
+    Integer delete(Integer id) throws SQLException;
+    
+    Integer deleteAll()throws SQLException;
 
-    Student update(Student student) throws SQLException, ClassNotFoundException;
+    Student update(Student student) throws SQLException;
 }

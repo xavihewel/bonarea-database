@@ -9,7 +9,6 @@ import com.bonarea.dao.StudentDao;
 import com.bonarea.dao.StudentDaoImpl;
 import com.bonarea.model.Student;
 import java.sql.SQLException;
-import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -44,12 +43,13 @@ public class StudentDaoIntegrationTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws SQLException {
         System.out.println("runs after each test method");
+        Integer result = studentDao.deleteAll();
     }
 
     @Test
-    public void testAdd() throws SQLException, ClassNotFoundException {
+    public void testAdd() throws SQLException {
         Student student = new Student();
         student.setFirstName("Pepe");
         student.setLastName("Soto");
@@ -58,34 +58,56 @@ public class StudentDaoIntegrationTest {
     }
 
     @Test
-    public void testGetById() throws SQLException, ClassNotFoundException {
-        Student student = studentDao.getStudentById(5);
-        assertTrue(student != null);
+    public void testGetById() throws SQLException {
+        Student student = new Student();
+        student.setFirstName("Pepe");
+        student.setLastName("Soto");
+        student.setEmail("pepe@gmail.com");
+        Student studentAdded = studentDao.add(student);
+        assertTrue(studentDao.getStudentById(studentAdded.getId()) != null);
     }
 
     @Test
-    public void testGetAll() throws SQLException, ClassNotFoundException {
-        List<Student> students = studentDao.getAll();
-        assertTrue(!students.isEmpty());
+    public void testGetAll() throws SQLException {
+        Student student = new Student();
+        student.setFirstName("Pepe");
+        student.setLastName("Soto");
+        student.setEmail("pepe@gmail.com");
+        Student studentAdded = studentDao.add(student);
+        assertTrue(!studentDao.getAll().isEmpty());
     }
 
     @Test
-    public void testDelete() throws SQLException, ClassNotFoundException {
-        Student student = new Student("test", "test", "test");
-        student = studentDao.add(student);
-        Integer id = student.getId();
-        studentDao.delete(id);
-        assertTrue(studentDao.getStudentById(id) == null);
+    public void testDelete() throws SQLException {
+        Student student = new Student();
+        student.setFirstName("Pepe");
+        student.setLastName("Soto");
+        student.setEmail("pepe@gmail.com");
+        Student studentAdded = studentDao.add(student);
+        assertTrue(studentDao.delete(studentAdded.getId()) == 1);
     }
-    
+
     @Test
-    public void testUpdate() throws SQLException, ClassNotFoundException {
-        Student student = new Student("test", "test", "test");
+    public void testUpdate() throws SQLException {
+        Student student = new Student();
+        student.setFirstName("Pepe");
+        student.setLastName("Soto");
+        student.setEmail("pepe@gmail.com");
         student = studentDao.add(student);
         student.setFirstName("test2");
         student.setLastName("test2");
         student.setEmail("test2");
         Student studentUpdated = studentDao.update(student);
         assertTrue(studentUpdated.equals(student));
+    }
+
+    @Test
+    public void testDeleteAll() throws SQLException {
+        Student student = new Student();
+        student.setFirstName("Pepe");
+        student.setLastName("Soto");
+        student.setEmail("pepe@gmail.com");
+        student = studentDao.add(student);
+        assertTrue(studentDao.deleteAll() == 1);
     }
 }

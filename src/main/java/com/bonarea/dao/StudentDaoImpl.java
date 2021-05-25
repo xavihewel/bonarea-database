@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,8 +32,18 @@ public class StudentDaoImpl implements StudentDao {
     private final static String GET_ALL_STATEMENT = "SELECT * from student";
     private final static String DELETE_STATEMENT = "DELETE FROM student"
             + " WHERE id=?";
+    private final static String DELETE_ALL_STATEMENT = "DELETE FROM student";
+
     private final static String UPDATE_STATEMENT = "UPDATE student SET"
             + " firstname=?, lastname=?, email=? where id=?";
+
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(StudentDaoImpl.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
 
     private Student getFromResultSet(ResultSet rs) throws SQLException {
         Student student = new Student();
@@ -44,10 +55,10 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public Student add(Student student) throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.jdbc.Driver");
-
-        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement preparedInsert = con.prepareStatement(INSERT_STATEMENT,
+    public Student add(Student student) throws SQLException {
+        Integer generatedKey = 0;
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  
+                PreparedStatement preparedInsert = con.prepareStatement(INSERT_STATEMENT,
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             preparedInsert.setString(1, student.getFirstName());
@@ -55,24 +66,22 @@ public class StudentDaoImpl implements StudentDao {
             preparedInsert.setString(3, student.getEmail());
 
             preparedInsert.executeUpdate();
-            ResultSet resultset = preparedInsert.getGeneratedKeys();
-            while (resultset.next()) {
-                int generatedKey = resultset.getInt(1);
-                student.setId(generatedKey);
-                System.out.println("Clave generada = " + generatedKey);
+            try ( ResultSet resultset = preparedInsert.getGeneratedKeys()) {
+                while (resultset.next()) {
+                    generatedKey = resultset.getInt(1);
+                    student.setId(generatedKey);
+                    System.out.println("Clave generada = " + generatedKey);
+                }
             }
         }
-        return student;
+        return getStudentById(generatedKey);
     }
 
     @Override
-    public Student getStudentById(Integer id) throws SQLException, ClassNotFoundException {
+    public Student getStudentById(Integer id) throws SQLException {
         Student student = null;
-        Class.forName("com.mysql.cj.jdbc.Driver");
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = this.getByPreparedStatement(con, id);  ResultSet rs = ps.executeQuery()) {
 
-        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(GET_BY_ID_STATEMENT)) {
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 student = this.getFromResultSet(rs);
             }
@@ -80,13 +89,16 @@ public class StudentDaoImpl implements StudentDao {
         return student;
     }
 
-    @Override
-    public List<Student> getAll() throws SQLException, ClassNotFoundException {
-        List<Student> students = new ArrayList<>();
-        Class.forName("com.mysql.cj.jdbc.Driver");
+    private PreparedStatement getByPreparedStatement(Connection con, int userId) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(GET_BY_ID_STATEMENT);
+        ps.setInt(1, userId);
+        return ps;
+    }
 
-        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(GET_ALL_STATEMENT)) {
-            ResultSet rs = ps.executeQuery();
+    @Override
+    public List<Student> getAll() throws SQLException {
+        List<Student> students = new ArrayList<>();
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(GET_ALL_STATEMENT);  ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 students.add(this.getFromResultSet(rs));
             }
@@ -95,19 +107,16 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void delete(Integer id) throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-
+    public Integer delete(Integer id) throws SQLException {
         try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(DELETE_STATEMENT)) {
-            ps.setInt(1, (Integer) id);
-            ps.executeUpdate();
+            ps.setInt(1, id);
+            Integer row = ps.executeUpdate();
+            return row;
         }
     }
 
     @Override
-    public Student update(Student student) throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.jdbc.Driver");
-
+    public Student update(Student student) throws SQLException {
         try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement preparedUpdate = con.prepareStatement(UPDATE_STATEMENT,
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
 
@@ -118,6 +127,14 @@ public class StudentDaoImpl implements StudentDao {
 
             preparedUpdate.executeUpdate();
         }
-        return student;
+        return this.getStudentById(student.getId());
+    }
+
+    @Override
+    public Integer deleteAll() throws SQLException {
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(DELETE_ALL_STATEMENT)) {
+            int row = ps.executeUpdate();
+            return row;
+        }
     }
 }
