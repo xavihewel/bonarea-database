@@ -45,7 +45,7 @@ public class StudentDaoIntegrationTest {
     @After
     public void tearDown() throws SQLException {
         System.out.println("runs after each test method");
-        Integer result = studentDao.deleteAll();
+        studentDao.deleteAll();
     }
 
     @Test
@@ -73,8 +73,15 @@ public class StudentDaoIntegrationTest {
         student.setFirstName("Pepe");
         student.setLastName("Soto");
         student.setEmail("pepe@gmail.com");
-        Student studentAdded = studentDao.add(student);
-        assertTrue(!studentDao.getAll().isEmpty());
+
+        Student student1 = new Student();
+        student1.setFirstName("Juan");
+        student1.setLastName("Ferrer");
+        student1.setEmail("juan@gmail.com");
+        
+        studentDao.add(student);
+        studentDao.add(student1);
+        assertTrue(studentDao.getAll().size() == 2);
     }
 
     @Test
@@ -84,7 +91,7 @@ public class StudentDaoIntegrationTest {
         student.setLastName("Soto");
         student.setEmail("pepe@gmail.com");
         Student studentAdded = studentDao.add(student);
-        assertTrue(studentDao.delete(studentAdded.getId()) == 1);
+        assertTrue(studentDao.delete(studentAdded.getId()) > 0);
     }
 
     @Test

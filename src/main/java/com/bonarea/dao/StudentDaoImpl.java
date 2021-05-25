@@ -98,7 +98,9 @@ public class StudentDaoImpl implements StudentDao {
     @Override
     public List<Student> getAll() throws SQLException {
         List<Student> students = new ArrayList<>();
-        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement ps = con.prepareStatement(GET_ALL_STATEMENT);  ResultSet rs = ps.executeQuery()) {
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  
+                PreparedStatement ps = con.prepareStatement(GET_ALL_STATEMENT);  
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 students.add(this.getFromResultSet(rs));
             }
@@ -117,8 +119,8 @@ public class StudentDaoImpl implements StudentDao {
 
     @Override
     public Student update(Student student) throws SQLException {
-        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  PreparedStatement preparedUpdate = con.prepareStatement(UPDATE_STATEMENT,
-                PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try ( Connection con = DriverManager.getConnection(CONNECTIONSTRING, USER, PWD);  
+                PreparedStatement preparedUpdate = con.prepareStatement(UPDATE_STATEMENT)) {
 
             preparedUpdate.setString(1, student.getFirstName());
             preparedUpdate.setString(2, student.getLastName());
